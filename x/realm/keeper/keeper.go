@@ -79,6 +79,29 @@ func (k Keeper) Logger() log.Logger {
 	return k.logger
 }
 
+// GetNextRealmID gets and increments the realm ID counter
+func (k Keeper) GetNextRealmID(ctx context.Context) (uint64, error) {
+	genesis := k.ExportGenesis(ctx)
+
+	currentID := genesis.NextRealmId
+	genesis.NextRealmId = currentID + 1
+
+	if err := k.InitGenesis(ctx, genesis); err != nil {
+		return 0, err
+	}
+
+	return currentID, nil
+}
+
+// // GetNextRealmID gets and increments the global realm ID counter
+// func (k Keeper) GetNextRealmID(ctx context.Context) (uint64, error) {
+// 	sequence, err := k.OrmDB.RealmSequence().Next(ctx)
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	return sequence, nil
+// }
+
 // InitGenesis initializes the module's state from a genesis state.
 func (k *Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error {
 

@@ -32,9 +32,15 @@ func (ms msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams
 // CreateRealm implements types.MsgServer.
 func (ms msgServer) CreateRealm(ctx context.Context, msg *types.MsgCreateRealm) (*types.MsgCreateRealmResponse, error) {
 
-	id := ms.k.ExportGenesis(ctx).GetNextRealmId()
+	if msg.Name == "" {
+		return nil, errors.Wrap(types.ErrInvalidLengthTx, "realm name cannot be empty")
+	}
+	// id, err := ms.k.GetNextRealmID(ctx)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	realm := &apiv1.Realm{
-		Id:   id,
+		// Id:   id,
 		Name: msg.Name,
 	}
 

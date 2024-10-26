@@ -11,6 +11,8 @@ import (
 
 type RealmTable interface {
 	Insert(ctx context.Context, realm *Realm) error
+	InsertReturningId(ctx context.Context, realm *Realm) (uint64, error)
+	LastInsertedSequence(ctx context.Context) (uint64, error)
 	Update(ctx context.Context, realm *Realm) error
 	Save(ctx context.Context, realm *Realm) error
 	Delete(ctx context.Context, realm *Realm) error
@@ -74,7 +76,7 @@ func (this RealmNameIndexKey) WithName(name string) RealmNameIndexKey {
 }
 
 type realmTable struct {
-	table ormtable.Table
+	table ormtable.AutoIncrementTable
 }
 
 func (this realmTable) Insert(ctx context.Context, realm *Realm) error {
@@ -91,6 +93,14 @@ func (this realmTable) Save(ctx context.Context, realm *Realm) error {
 
 func (this realmTable) Delete(ctx context.Context, realm *Realm) error {
 	return this.table.Delete(ctx, realm)
+}
+
+func (this realmTable) InsertReturningId(ctx context.Context, realm *Realm) (uint64, error) {
+	return this.table.InsertReturningPKey(ctx, realm)
+}
+
+func (this realmTable) LastInsertedSequence(ctx context.Context) (uint64, error) {
+	return this.table.LastInsertedSequence(ctx)
 }
 
 func (this realmTable) Has(ctx context.Context, id uint64) (found bool, err error) {
@@ -156,7 +166,7 @@ func NewRealmTable(db ormtable.Schema) (RealmTable, error) {
 	if table == nil {
 		return nil, ormerrors.TableNotFound.Wrap(string((&Realm{}).ProtoReflect().Descriptor().FullName()))
 	}
-	return realmTable{table}, nil
+	return realmTable{table.(ormtable.AutoIncrementTable)}, nil
 }
 
 type StateStore interface {
